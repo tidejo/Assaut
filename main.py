@@ -1,6 +1,6 @@
 ### Main script for Assaut game
 ### 
-### Tijn de Jong, Daan Peeters and Mitchell Kamppert
+### Tijn de Jong, Daan Peeters and Mitchell Kampert
 
 import pygame
 import sys
