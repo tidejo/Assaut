@@ -3,14 +3,23 @@ from pyglet import shapes
 import time
 import random
 import math
+from pyglet import image
+from pyglet.image.codecs.png import PNGImageDecoder
 
 START_TIME = time.time()
 PI = math.pi
+SPRITE_SCALE = 0.3
 
 music = pyglet.resource.media('sounds/background_music/penis_music.wav')
 gunshot_sound = pyglet.resource.media('sounds/sound_fx/gunshot.wav', streaming=False)
 collision_sound = pyglet.resource.media('sounds/sound_fx/bonk.wav', streaming=False)
 music.play()
+
+
+ufo1 = image.load('sprites/ufo-1.png', decoder=PNGImageDecoder())
+ufo_width = ufo1.width
+ufo_height = ufo1.height
+ufo2 = image.load('sprites/ufo-2.png', decoder=PNGImageDecoder())
 
 key_states = {  # Dict which sets key states
     pyglet.window.key.W: False,
@@ -36,14 +45,17 @@ class Player:
         self.velocity = [0, 0]
         self.thrust = 0.1
         self.mass = 50
-        self.width = 50
-        self.height = 50
+        self.width = ufo_width
+        self.height = ufo_height
         self.color = color
         self.health = 100
         self.last_shot = 0
     
     def draw(self):
-        shapes.Rectangle(self.position[0] - self.width / 2, self.position[1] - self.height/2, self.width, self.height, color=self.color).draw()
+        if self.id == 1:
+            ufo1.blit(self.position[0]-(self.width/2), self.position[1]-(self.height/2))
+        elif self.id == 2:
+            ufo2.blit(self.position[0]-(self.width/2), self.position[1]-(self.height/2))
     
     def accelerate(self, dir):
         self.velocity[0] += self.thrust * math.cos(dir)
