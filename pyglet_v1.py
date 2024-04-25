@@ -20,26 +20,26 @@ key_states = {  # Dict which sets key states
 class Player:
     """Creates player class"""
     def __init__(self, x, y, color):
+        self.position_x = x
+        self.position_y = y
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.acceleration = 0.1
         self.width = 50
         self.height = 50
-        self.rect = shapes.Rectangle(x, y, self.width, self.height, color=color)
-        self.speed = 5
+        self.color = color
         self.health = 100
     
     def draw(self):
-        self.rect.draw()
+        shapes.Rectangle(self.position_x, self.position_y, self.width, self.height, color=self.color).draw()
     
-    def move_up(self):
-        self.rect.y += self.speed
-    
-    def move_down(self):
-        self.rect.y -= self.speed
-    
-    def move_left(self):
-        self.rect.x -= self.speed
-    
-    def move_right(self):
-        self.rect.x += self.speed
+    def accelerate(self, x, y):
+        self.velocity_x += self.acceleration * x
+        self.velocity_y += self.acceleration * y
+
+    def move(self):
+        self.position_x += self.velocity_x
+        self.position_y += self.velocity_y
 
 class Shot:
     pass
@@ -99,21 +99,24 @@ def display_text():
 
 def move(dt):
     if key_states[pyglet.window.key.W]:
-        player1.move_up()
+        player1.accelerate(0,1)
     if key_states[pyglet.window.key.S]:
-        player1.move_down()
+        player1.accelerate(0,-1)
     if key_states[pyglet.window.key.A]:
-        player1.move_left()
+        player1.accelerate(-1,0)
     if key_states[pyglet.window.key.D]:
-        player1.move_right()
+        player1.accelerate(1,0)
     if key_states[pyglet.window.key.UP]:
-        player2.move_up()
+        player2.accelerate(0,1)
     if key_states[pyglet.window.key.DOWN]:
-        player2.move_down()
+        player2.accelerate(0,-1)
     if key_states[pyglet.window.key.LEFT]:
-        player2.move_left()
+        player2.accelerate(-1,0)
     if key_states[pyglet.window.key.RIGHT]:
-        player2.move_right()
+        player2.accelerate(1,0)
+        
+    player1.move()
+    player2.move()
 
 
 window = pyglet.window.Window(1000, 800)
