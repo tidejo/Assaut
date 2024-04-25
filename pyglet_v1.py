@@ -20,10 +20,13 @@ key_states = {  # Dict which sets key states
     pyglet.window.key.SLASH: False,
 }
 
+mouse = [0, 0]
+
 
 class Player:
     """Creates player class"""
-    def __init__(self, x, y, color):
+    def __init__(self, id, x, y, color):
+        self.id = id
         self.position = [x, y]
         self.velocity = [0, 0]
         self.thrust = 0.1
@@ -32,6 +35,7 @@ class Player:
         self.height = 50
         self.color = color
         self.health = 100
+        self.last_shot = 0
     
     def draw(self):
         shapes.Rectangle(self.position[0] - self.width / 2, self.position[1] - self.height/2, self.width, self.height, color=self.color).draw()
@@ -43,6 +47,9 @@ class Player:
     def move(self):
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
+
+    def shot(self):
+        self.last_shot = time.time()
 
 
 class Shot:
@@ -140,15 +147,18 @@ def collision(object1, object2):
             object2.velocity[1] = object2.velocity[1] + ((v1[1] - v2[1])*mass_ratio1*2)
 
 
-def shoot(gunner, projectiles):
+def shoot(gunner, projectiles, mouse):
     if len(projectiles) > 20:
         del projectiles[0]
 
     v_projectile = 5
 
-    v = gunner.velocity.copy()
-    vl = math.sqrt(v[0]**2 + v[1]**2)
-    v = [(v[0]*v_projectile)/vl, (v[1]*v_projectile)/vl]
+    dx = mouse[0] - gunner.position[0]
+    dy = mouse[1] - gunner.position[1]
+
+    vl = math.sqrt(dx**2 + dy**2)
+
+    v = [(dx*v_projectile)/vl, (dy*v_projectile)/vl]
     projectiles.append(Projectile(gunner.position.copy(), v))
     return projectiles
 
@@ -171,10 +181,12 @@ def update(dt):
     if key_states[pyglet.window.key.DOWN]:
         player2.accelerate(1.5*PI)
 
-    if key_states[pyglet.window.key.SPACE]:
-        shoot(player1, projectiles)
-    if key_states[pyglet.window.key.SLASH]:
-        shoot(player2, projectiles)
+    if key_states[pyglet.window.key.SPACE] and (time.time() - player1.last_shot) > 1:
+        shoot(player1, projectiles, mouse)
+        player1.shot()
+    if key_states[pyglet.window.key.SLASH] and (time.time() - player2.last_shot) > 1:
+        shoot(player2, projectiles, mouse)
+        player2.shot()
         
     player1.move()
     player2.move()
@@ -192,8 +204,8 @@ def update(dt):
 window = pyglet.window.Window(1000, 800)
 batch = pyglet.graphics.Batch()
 
-player1 = Player(150, 240, (255, 0, 0))  # (start x, start y, color)
-player2 = Player(250, 240, (0, 0, 255))
+player1 = Player(1, 150, 240, (255, 0, 0))  # (id, start x, start y, color)
+player2 = Player(2, 250, 240, (0, 0, 255))
 
 number_of_obstacles = random.randint(5,10)
 obstacles = []
@@ -211,6 +223,12 @@ def on_key_press(symbol, modifiers):
 def on_key_release(symbol, modifiers):
     if symbol in key_states:
         key_states[symbol] = False
+
+@window.event
+def on_mouse_motion(mouse_x, mouse_y, mouse_dx, mouse_dy):
+    mouse[0] = mouse_x
+    mouse[1] = mouse_y
+    pass
 
 @window.event
 def on_draw():
