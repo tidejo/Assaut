@@ -7,6 +7,11 @@ import math
 START_TIME = time.time()
 PI = math.pi
 
+music = pyglet.resource.media('sounds/background_music/penis_music.wav')
+gunshot_sound = pyglet.resource.media('sounds/sound_fx/gunshot.wav', streaming=False)
+collision_sound = pyglet.resource.media('sounds/sound_fx/bonk.wav', streaming=False)
+music.play()
+
 key_states = {  # Dict which sets key states
     pyglet.window.key.W: False,
     pyglet.window.key.S: False,
@@ -146,6 +151,8 @@ def collision(object1, object2):
             object1.velocity[1] = object1.velocity[1] - ((v1[1] - v2[1])*mass_ratio2*2)
             object2.velocity[1] = object2.velocity[1] + ((v1[1] - v2[1])*mass_ratio1*2)
 
+        collision_sound.play()
+
 
 def shoot(gunner, projectiles, mouse):
     if len(projectiles) > 20:
@@ -184,9 +191,11 @@ def update(dt):
     if key_states[pyglet.window.key.SPACE] and (time.time() - player1.last_shot) > 1:
         shoot(player1, projectiles, mouse)
         player1.shot()
+        gunshot_sound.play()
     if key_states[pyglet.window.key.SLASH] and (time.time() - player2.last_shot) > 1:
         shoot(player2, projectiles, mouse)
         player2.shot()
+        gunshot_sound.play()
         
     player1.move()
     player2.move()
