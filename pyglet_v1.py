@@ -158,7 +158,7 @@ def shoot(gunner, projectiles, mouse):
 
     vl = math.sqrt(dx**2 + dy**2)
 
-    v = [(dx*v_projectile)/vl, (dy*v_projectile)/vl]
+    v = [((dx*v_projectile)/vl) + gunner.velocity[0], ((dy*v_projectile)/vl) + gunner.velocity[1]]
     projectiles.append(Projectile(gunner.position.copy(), v))
     return projectiles
 
