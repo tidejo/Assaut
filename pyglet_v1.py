@@ -32,7 +32,7 @@ class Player:
         self.health = 100
     
     def draw(self):
-        shapes.Rectangle(self.position[0], self.position[1], self.width, self.height, color=self.color).draw()
+        shapes.Rectangle(self.position[0] - self.width / 2, self.position[1] - self.height/2, self.width, self.height, color=self.color).draw()
     
     def accelerate(self, dir):
         self.velocity[0] += self.thrust * math.cos(dir)
@@ -60,10 +60,17 @@ class Obstacle:
     def __init__(self, x, y, color):
         self.width = random.randint(10,30)
         self.height = random.randint(10,30)
-        self.rect = shapes.Rectangle(x, y, self.width, self.height, color=color)
+        self.position = [x,y]
+        self.velocity = [0,0]
+        self.mass = self.width * self.height / 20
+        self.color = color
     
     def draw(self):
-        self.rect.draw()
+        shapes.Rectangle(self.position[0] - self.width /2, self.position[1] - self.height/2, self.width / 2, self.height/2, color=self.color).draw()
+    
+    def move(self):
+        self.position[0] += self.velocity[0]
+        self.position[1] += self.velocity[1]
 
 
 def display_text():
@@ -102,7 +109,6 @@ def display_text():
 
 def collision(object1, object2):
     if abs(object1.position[0] - object2.position[0]) <= (object1.width/2 + object2.width/2) and abs(object1.position[1] - object2.position[1]) <= (object1.height/2 + object2.height/2):
-        print("collision")
         v1 = object1.velocity.copy()
         v2 = object2.velocity.copy()
         mass_ratio1 = object1.mass/(object1.mass + object2.mass)
@@ -136,6 +142,10 @@ def update(dt):
         
     player1.move()
     player2.move()
+    for obstacle in obstacles:
+        obstacle.move()
+        collision(player1, obstacle)
+        collision(player2, obstacle)
 
     collision(player1, player2)
 
