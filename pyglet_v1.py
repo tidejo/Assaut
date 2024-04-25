@@ -17,6 +17,7 @@ key_states = {  # Dict which sets key states
     pyglet.window.key.LEFT: False,
     pyglet.window.key.RIGHT: False,
     pyglet.window.key.SPACE: False,
+    pyglet.window.key.SLASH: False,
 }
 
 
@@ -140,7 +141,11 @@ def collision(object1, object2):
 
 
 def shoot(gunner, projectiles):
+    if len(projectiles) > 20:
+        del projectiles[0]
+
     v_projectile = 5
+
     v = gunner.velocity.copy()
     vl = math.sqrt(v[0]**2 + v[1]**2)
     v = [(v[0]*v_projectile)/vl, (v[1]*v_projectile)/vl]
@@ -168,6 +173,8 @@ def update(dt):
 
     if key_states[pyglet.window.key.SPACE]:
         shoot(player1, projectiles)
+    if key_states[pyglet.window.key.SLASH]:
+        shoot(player2, projectiles)
         
     player1.move()
     player2.move()
