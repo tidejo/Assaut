@@ -15,7 +15,8 @@ key_states = {  # Dict which sets key states
     pyglet.window.key.UP: False,
     pyglet.window.key.DOWN: False,
     pyglet.window.key.LEFT: False,
-    pyglet.window.key.RIGHT: False
+    pyglet.window.key.RIGHT: False,
+    pyglet.window.key.SPACE: False,
 }
 
 
@@ -64,6 +65,22 @@ class Obstacle:
         self.velocity = [0,0]
         self.mass = self.width * self.height / 20
         self.color = color
+    
+    def draw(self):
+        shapes.Rectangle(self.position[0] - self.width /2, self.position[1] - self.height/2, self.width / 2, self.height/2, color=self.color).draw()
+    
+    def move(self):
+        self.position[0] += self.velocity[0]
+        self.position[1] += self.velocity[1]
+
+
+class Projectile:
+    def __init__(self, p, v):
+        self.width = random.randint(10,10)
+        self.height = random.randint(10,10)
+        self.position = [p[0],p[1]]
+        self.velocity = [v[0],v[1]]
+        self.color = (0, 255, 0)
     
     def draw(self):
         shapes.Rectangle(self.position[0] - self.width /2, self.position[1] - self.height/2, self.width / 2, self.height/2, color=self.color).draw()
@@ -122,6 +139,15 @@ def collision(object1, object2):
             object2.velocity[1] = object2.velocity[1] + ((v1[1] - v2[1])*mass_ratio1*2)
 
 
+def shoot(gunner, projectiles):
+    v_projectile = 5
+    v = gunner.velocity.copy()
+    vl = math.sqrt(v[0]**2 + v[1]**2)
+    v = [(v[0]*v_projectile)/vl, (v[1]*v_projectile)/vl]
+    projectiles.append(Projectile(gunner.position.copy(), v))
+    return projectiles
+
+
 def update(dt):
     if key_states[pyglet.window.key.D]:
         player1.accelerate(0)
@@ -139,6 +165,9 @@ def update(dt):
         player2.accelerate(PI)
     if key_states[pyglet.window.key.DOWN]:
         player2.accelerate(1.5*PI)
+
+    if key_states[pyglet.window.key.SPACE]:
+        shoot(player1, projectiles)
         
     player1.move()
     player2.move()
@@ -146,6 +175,9 @@ def update(dt):
         obstacle.move()
         collision(player1, obstacle)
         collision(player2, obstacle)
+
+    for projectile in projectiles:
+        projectile.move()
 
     collision(player1, player2)
 
@@ -160,6 +192,8 @@ number_of_obstacles = random.randint(5,10)
 obstacles = []
 for i in range(number_of_obstacles):
     obstacles.append(Obstacle(random.randint(100,900), random.randint(100,700),(255,255,255)))
+
+projectiles = []
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -179,6 +213,8 @@ def on_draw():
     player2.draw()
     for obstacle in obstacles:
         obstacle.draw()
+    for projectile in projectiles:
+        projectile.draw()
 
 # Schedules the update function to be called every frame
 pyglet.clock.schedule_interval(update, 1/144.0)
