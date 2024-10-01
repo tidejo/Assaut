@@ -9,17 +9,20 @@ from pyglet.image.codecs.png import PNGImageDecoder
 START_TIME = time.time()
 PI = math.pi
 SPRITE_SCALE = 0.3
+WIDTH = 1000
+HEIGHT = 800
 
 music = pyglet.resource.media('sounds/background_music/penis_music.wav')
 gunshot_sound = pyglet.resource.media('sounds/sound_fx/gunshot.wav', streaming=False)
 collision_sound = pyglet.resource.media('sounds/sound_fx/bonk.wav', streaming=False)
 music.play()
 
-
 ufo1 = image.load('sprites/ufo-1.png', decoder=PNGImageDecoder())
+ufo2 = image.load('sprites/ufo-2.png', decoder=PNGImageDecoder())
+
 ufo_width = ufo1.width
 ufo_height = ufo1.height
-ufo2 = image.load('sprites/ufo-2.png', decoder=PNGImageDecoder())
+
 
 key_states = {  # Dict which sets key states
     pyglet.window.key.W: False,
@@ -68,28 +71,15 @@ class Player:
     def shot(self):
         self.last_shot = time.time()
 
-
-class Shot:
-    pass
-
-class Powerup_speed:
-    pass
-
-class Powerup_health:
-    pass
-
-class Powerup_heal:
-    pass
-
 class Obstacle:
     """Class wich spawns obstacles for the players to move around"""
-    def __init__(self, x, y, color):
+    def __init__(self):
         self.width = random.randint(10,30)
         self.height = random.randint(10,30)
-        self.position = [x,y]
+        self.position = [random.randint(100,WIDTH - 100), random.randint(100,HEIGHT - 100)]
         self.velocity = [0,0]
         self.mass = self.width * self.height / 20
-        self.color = color
+        self.color = (255,255,255)
     
     def draw(self):
         shapes.Rectangle(self.position[0] - self.width /2, self.position[1] - self.height/2, self.width / 2, self.height/2, color=self.color).draw()
@@ -97,7 +87,6 @@ class Obstacle:
     def move(self):
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
-
 
 class Projectile:
     def __init__(self, p, v):
@@ -115,41 +104,21 @@ class Projectile:
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
 
-
+# Function to display text at the appropiate times without having to define it in the on_draw() function
 def display_text():
-    """Function to display text at the appropiate times 
-    without having to define it in the on_draw() function"""
-    opening_text = pyglet.text.Label(
-    'Welkom bij de super mega assaut game',
-    font_name='Times New Roman',
-    font_size=26,
-    x=window.width//2, y=window.height-100,
-    anchor_x='center', anchor_y='center'
-    )
-    explanation_game = pyglet.text.Label(
-    'Jullie doel is om elkaar kapot te maken',
-    font_name='Times New Roman',
-    font_size=26,
-    x=window.width//2, y=window.height-100,
-    anchor_x='center', anchor_y='center'
-    )
-    tijn_dikke_flikker = pyglet.text.Label(
-    'Mind you dat ik dit aan het typen ben terwijl Tijn lekker ligt te ronken met zijn dikke reet. Kaulo hoertje.',
-    font_name='Times New Roman',
-    font_size=16,
-    x=window.width//2, y=window.height-100,
-    anchor_x='center', anchor_y='center'
-    )
+    opening_text = pyglet.text.Label('Welkom bij de super mega assaut game',font_name='Times New Roman',font_size=26,x=window.width//2, y=window.height-100,anchor_x='center', anchor_y='center')
+    explanation_game = pyglet.text.Label('Jullie doel is om elkaar kapot te maken',font_name='Times New Roman',font_size=26,x=window.width//2, y=window.height-100,anchor_x='center', anchor_y='center')
+    tijn_dikke_flikker = pyglet.text.Label('Mind you dat ik dit aan het typen ben terwijl Tijn lekker ligt te ronken met zijn dikke reet. Kaulo hoertje.',font_name='Times New Roman',font_size=16,x=window.width//2, y=window.height-100,anchor_x='center', anchor_y='center')
 
     if not time.time() > START_TIME + 3:
         return opening_text.draw()
-    if time.time() > START_TIME+3 and not time.time() > START_TIME+6:
+    elif time.time() > START_TIME+3 and not time.time() > START_TIME+6:
         return explanation_game.draw()
-    if time.time() > START_TIME+6 and not time.time() > START_TIME+14:
+    elif time.time() > START_TIME+6 and not time.time() > START_TIME+14:
         return tijn_dikke_flikker.draw()
     
 
-
+# If two objects hit each other simulate their collision based on their mass and velocity
 def collision(object1, object2):
     if abs(object1.position[0] - object2.position[0]) <= (object1.width/2 + object2.width/2) and abs(object1.position[1] - object2.position[1]) <= (object1.height/2 + object2.height/2):
         v1 = object1.velocity.copy()
@@ -166,11 +135,13 @@ def collision(object1, object2):
 
         collision_sound.play()
 
+# If player and projectile are at the same spot player is hit and projectile is removed
 def hit(player, projectile):
     if abs(player.position[0] - projectile.position[0]) <= (player.width/2 + projectile.width/2) and abs(player.position[1] - projectile.position[1]) <= (player.height/2 + projectile.height/2):
         player.health -= projectile.damage
         projectiles.remove(projectile)
 
+# If player presses shoot, shoot a projectile aiming in direction of the mouse, but adding the players own velocity
 def shoot(gunner, projectiles, mouse):
     if len(projectiles) > 20:
         del projectiles[0]
@@ -189,12 +160,13 @@ def shoot(gunner, projectiles, mouse):
     else:
         p[1] += (v[1] / abs(v[1])) * (gunner.height/1.5)
     projectiles.append(Projectile(p, v))
+    gunshot_sound.play()
     return projectiles
 
 
 def update(dt): 
     global game_over, winner
-         
+# Movement commands player 1         
     if key_states[pyglet.window.key.D]:
         player1.accelerate(0)
     if key_states[pyglet.window.key.W]:
@@ -203,6 +175,7 @@ def update(dt):
         player1.accelerate(PI)
     if key_states[pyglet.window.key.S]:
         player1.accelerate(1.5*PI)
+# Movement commands player 2
     if key_states[pyglet.window.key.RIGHT]:
         player2.accelerate(0)
     if key_states[pyglet.window.key.UP]:
@@ -211,15 +184,13 @@ def update(dt):
         player2.accelerate(PI)
     if key_states[pyglet.window.key.DOWN]:
         player2.accelerate(1.5*PI)
-
+# Shooting commands
     if key_states[pyglet.window.key.SPACE] and (time.time() - player1.last_shot) > 1:
         shoot(player1, projectiles, mouse)
         player1.shot()
-        gunshot_sound.play()
     if key_states[pyglet.window.key.SLASH] and (time.time() - player2.last_shot) > 1:
         shoot(player2, projectiles, mouse)
         player2.shot()
-        gunshot_sound.play()
         
     player1.move()
     player2.move()
@@ -235,14 +206,14 @@ def update(dt):
 
     collision(player1, player2)
 
-    if player1.health < 0:
+    if player1.health <= 0:
         game_over = True
         winner = player2
-    elif player2.health < 0:
+    elif player2.health <= 0:
         game_over = True
         winner = player1
 
-window = pyglet.window.Window(1000, 800)
+window = pyglet.window.Window(WIDTH, HEIGHT)
 batch = pyglet.graphics.Batch()
 
 player1 = Player(1, 150, 240, (255, 0, 0))  # (id, start x, start y, color)
@@ -251,7 +222,7 @@ player2 = Player(2, 250, 240, (0, 0, 255))
 number_of_obstacles = random.randint(5,10)
 obstacles = []
 for i in range(number_of_obstacles):
-    obstacles.append(Obstacle(random.randint(100,900), random.randint(100,700),(255,255,255)))
+    obstacles.append(Obstacle())
 
 projectiles = []
 
@@ -286,13 +257,7 @@ def on_draw():
         for projectile in projectiles:
             projectile.draw()
     else:
-        label = pyglet.text.Label(
-            f"GAME OVER\nPlayer {winner.id} has won!",
-            font_name='Times New Roman',
-            font_size=36,
-            x=window.width//2, y=window.height//2,
-            anchor_x='center', anchor_y='center'
-        )
+        label = pyglet.text.Label(f"GAME OVER\nPlayer {winner.id} has won!",font_name='Times New Roman',font_size=36,x=window.width//2, y=window.height//2,anchor_x='center', anchor_y='center')
         label.draw()
 
 # Schedules the update function to be called every frame
